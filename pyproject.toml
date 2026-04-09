@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "stancounts"
+version = "0.1.0"
+description = "Recover raw counts from log1p-normalized single-cell expression matrices"
+readme = {text = "Recover raw counts from log1p-normalized single-cell expression matrices.", content-type = "text/plain"}
+requires-python = ">=3.9"
+license = "MIT"
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.7",
+]
+
+[project.optional-dependencies]
+anndata = ["anndata>=0.8"]
+test = ["pytest>=7.0", "scanpy>=1.9"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/stancounts"]
