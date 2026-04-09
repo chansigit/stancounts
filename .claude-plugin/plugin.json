@@ -1,0 +1,20 @@
+{
+  "name": "stancounts",
+  "displayName": "stancounts",
+  "description": "Recover raw counts from log1p-normalized single-cell expression matrices",
+  "version": "0.1.0",
+  "author": {
+    "name": "chansigit"
+  },
+  "homepage": "https://github.com/chansigit/stancounts",
+  "repository": "https://github.com/chansigit/stancounts",
+  "license": "MIT",
+  "keywords": [
+    "single-cell",
+    "scRNA-seq",
+    "normalization",
+    "counts",
+    "log1p",
+    "bioinformatics"
+  ]
+}
