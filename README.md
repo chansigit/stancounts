@@ -40,8 +40,10 @@ The algorithm is **target_sum agnostic** — it works with any normalization tar
 
 ## Installation
 
+### Python package
+
 ```bash
-pip install stancounts
+pip install git+https://github.com/chansigit/stancounts.git
 ```
 
 Or from source:
@@ -51,6 +53,16 @@ git clone https://github.com/chansigit/stancounts.git
 cd stancounts
 pip install -e .
 ```
+
+### Claude Code plugin
+
+If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), stancounts is also available as a plugin with a built-in skill that guides Claude through the detection and recovery workflow:
+
+```
+/plugins add chansigit/stancounts
+```
+
+Once installed, simply ask Claude to "recover counts" or "reverse log1p" and the skill activates automatically.
 
 ## Quick start
 
