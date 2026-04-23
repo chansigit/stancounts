@@ -7,13 +7,9 @@ import numpy as np
 import pytest
 import scanpy as sc
 import scipy.sparse as sp
-from pathlib import Path
 
 import stancounts
 from stancounts.core import reverse_log1p
-
-PBMC_DIR = Path("/home/users/chensj16/s/projects/genofoundation/data/pbmc")
-CHONDRO_DIR = Path("/home/users/chensj16/s/data/chondro-atlas/h5ad")
 
 
 # ---- Helpers ----
@@ -56,9 +52,9 @@ def _assert_perfect_recovery(recovered, expected, label=""):
 # ---- Tests: Real PBMC data ----
 
 @pytest.mark.parametrize("dataset", ["pbmc3k.h5ad"])
-def test_pbmc_ground_truth(dataset):
+def test_pbmc_ground_truth(dataset, pbmc_dir):
     """100% exact recovery on PBMC datasets with ground truth counts."""
-    path = PBMC_DIR / dataset
+    path = pbmc_dir / dataset
     if not path.exists():
         pytest.skip(f"{path} not found")
 
@@ -119,6 +115,11 @@ def test_robust_min_count_gt_1():
     cell_exact = np.all(rec == counts, axis=1)
     assert cell_exact.sum() == counts.shape[0], (
         f"Robust recovery failed: {cell_exact.sum()}/{counts.shape[0]} cells perfect"
+    )
+    # The first 20 cells had their count=1 genes forced to 2, so the detector
+    # should have flagged all of them with correction=2.
+    assert (result["corrections"][:20] == 2).all(), (
+        f"Expected all 20 tampered cells to have correction=2, got {result['corrections'][:20]}"
     )
 
 
@@ -187,10 +188,10 @@ def test_anndata_integration():
 
 # ---- Tests: Roundtrip on chondro-atlas (normalize then reverse) ----
 
-def test_chondro_roundtrip():
+def test_chondro_roundtrip(chondro_dir):
     """Take a chondro dataset with raw counts, normalize, reverse, compare."""
     # Use the smallest one
-    path = CHONDRO_DIR / "01_Ji_2019.h5ad"
+    path = chondro_dir / "01_Ji_2019.h5ad"
     if not path.exists():
         pytest.skip(f"{path} not found")
 

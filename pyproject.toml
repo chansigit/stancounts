@@ -6,9 +6,24 @@ build-backend = "hatchling.build"
 name = "stancounts"
 version = "0.1.0"
 description = "Recover raw counts from log1p-normalized single-cell expression matrices"
-readme = {text = "Recover raw counts from log1p-normalized single-cell expression matrices.", content-type = "text/plain"}
+readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
+authors = [{name = "chansigit"}]
+keywords = ["single-cell", "scRNA-seq", "normalization", "log1p", "counts"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 dependencies = [
     "numpy>=1.22",
     "scipy>=1.7",
@@ -16,7 +31,23 @@ dependencies = [
 
 [project.optional-dependencies]
 anndata = ["anndata>=0.8"]
-test = ["pytest>=7.0", "scanpy>=1.9"]
+test = ["pytest>=7.0", "scanpy>=1.9", "anndata>=0.8"]
+
+[project.urls]
+Homepage = "https://github.com/chansigit/stancounts"
+Repository = "https://github.com/chansigit/stancounts"
+Issues = "https://github.com/chansigit/stancounts/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/stancounts"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
