@@ -9,6 +9,10 @@ description: >
   has been log1p-normalized and needs to be reverted to raw counts.
   Do NOT use for gene harmonization (that is stangene) or
   format conversion (that is stanobj).
+  Position in stan* family chain — Upstream: stangene (consumes
+  gene-harmonized h5ad whose X is log1p-normalized). Downstream: QC stage
+  (eca-curation 03_qc, driven by /eca-run; or stanqc when it ships).
+  Only invoked conditionally — skip when X is already integer counts.
 version: 1.0.0
 allowed-tools: [Bash, Read, Glob, Grep]
 ---
