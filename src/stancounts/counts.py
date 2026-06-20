@@ -65,6 +65,9 @@ def get_counts(
     Priority: whitelist integer layer -> integer X -> integer .raw (aligned)
     -> reverse_log1p(X) if X is log1p. Raises CountsUnavailable otherwise.
     Velocity layers (spliced/unspliced/...) are never treated as counts.
+
+    Note: the `base` parameter is currently unused — when recovering from
+    log1p, the base is auto-detected via `detect_normalization` (``det["base"]``).
     """
     exclude = set(exclude_layers)
 
@@ -83,7 +86,7 @@ def get_counts(
     # 3. .raw, aligned to adata.var_names (raw must cover all genes)
     raw = adata.raw
     if raw is not None and _is_integer_matrix(raw.X, n_sample=n_sample, seed=seed):
-        raw_pos = {g: i for i, g in enumerate(list(raw.var_names))}
+        raw_pos = {g: i for i, g in enumerate(raw.var_names)}
         if all(g in raw_pos for g in adata.var_names):
             cols = [raw_pos[g] for g in adata.var_names]
             rawX = raw.X

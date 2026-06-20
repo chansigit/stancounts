@@ -81,3 +81,15 @@ def test_unavailable_raises():
     ad = anndata.AnnData(X=floats)
     with pytest.raises(CountsUnavailable):
         get_counts(ad, allow_recovery=False)
+
+
+def test_custom_prefer_and_exclude_override():
+    counts = _counts()
+    ad = anndata.AnnData(X=sp.csr_matrix(_lognorm(counts)))
+    ad.layers["my_counts"] = sp.csr_matrix(counts)
+    # "my_counts" not in default whitelist -> would recover; custom prefer picks it
+    res = get_counts(ad, prefer_layers=("my_counts",))
+    assert res["source"] == "layer:my_counts"
+    # excluding it -> falls back to recovery from X
+    res2 = get_counts(ad, prefer_layers=("my_counts",), exclude_layers=("my_counts",))
+    assert res2["source"] == "recovered"
