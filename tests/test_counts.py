@@ -75,6 +75,41 @@ def test_velocity_layers_not_mistaken_for_counts():
     assert res["source"] == "recovered"  # spliced/unspliced excluded -> recover from X
 
 
+def _scaled(counts):
+    """A scaled (z-scored) matrix with negatives — neither integer nor log1p."""
+    ln = _lognorm(counts)
+    return (ln - ln.mean(0)) / (ln.std(0) + 1e-8)
+
+
+def test_recovered_from_log1p_layer_when_X_scaled():
+    # X is scaled (has negatives): not integer, not log1p. The recoverable signal
+    # lives in a log1p layer -> recover from the layer instead of giving up.
+    counts = _counts()
+    ad = anndata.AnnData(X=_scaled(counts))
+    ad.layers["lognorm"] = sp.csr_matrix(_lognorm(counts))
+    res = get_counts(ad)
+    assert res["source"] == "recovered:layer:lognorm"
+    np.testing.assert_array_equal(np.asarray(res["counts"].todense()), counts)
+
+
+def test_recovery_prefers_normalized_named_layer():
+    # Among multiple log1p layers, one whose name hints at normalized data wins.
+    counts = _counts()
+    ad = anndata.AnnData(X=_scaled(counts))
+    ad.layers["aaa_other"] = sp.csr_matrix(_lognorm(_counts(seed=9)))  # log1p but unhinted
+    ad.layers["data"] = sp.csr_matrix(_lognorm(counts))                # hinted -> preferred
+    res = get_counts(ad)
+    assert res["source"] == "recovered:layer:data"
+    np.testing.assert_array_equal(np.asarray(res["counts"].todense()), counts)
+
+
+def test_scaled_X_no_recoverable_layer_raises():
+    # X scaled, no integer layer and no log1p layer -> genuinely unavailable.
+    ad = anndata.AnnData(X=_scaled(_counts()))
+    with pytest.raises(CountsUnavailable):
+        get_counts(ad)
+
+
 def test_unavailable_raises():
     rng = np.random.RandomState(0)
     floats = rng.uniform(0.1, 5.0, size=(50, 30))  # non-integer, not log1p of counts

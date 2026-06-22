@@ -49,6 +49,27 @@ def _is_integer_matrix(M, *, n_sample: int = 200, seed: int = 0) -> bool:
     return bool(np.allclose(data, np.round(data), rtol=0, atol=1e-6))
 
 
+# Layer-name substrings hinting at log-normalized data; such layers are tried
+# first when recovering counts from a layer (X is always tried before any layer).
+_RECOVERY_NAME_HINTS = ("lognorm", "normalized", "data")
+
+
+def _recovery_candidates(adata, exclude):
+    """Yield (source_label, matrix) to try for log1p recovery.
+
+    X first (label ``"recovered"``, preserving the historical source string), then
+    non-excluded layers whose name hints at normalized data, then the remaining
+    layers in natural order. This lets a scaled/negative X — which is neither
+    integer nor log1p — fall back to a log1p-normalized layer (e.g. ``lognorm``).
+    """
+    yield "recovered", adata.X
+    layers = [n for n in adata.layers if n not in exclude]
+    hinted = [n for n in layers if any(h in n.lower() for h in _RECOVERY_NAME_HINTS)]
+    rest = [n for n in layers if n not in hinted]
+    for name in hinted + rest:
+        yield f"recovered:layer:{name}", adata.layers[name]
+
+
 def get_counts(
     adata,
     *,
@@ -93,13 +114,18 @@ def get_counts(
             aligned = rawX.tocsc()[:, cols].tocsr() if sp.issparse(rawX) else np.asarray(rawX)[:, cols]
             return {"counts": aligned, "source": "raw"}
 
-    # 4. recover from log1p-normalized X
+    # 4. recover from log1p-normalized X, then from a log1p-normalized layer
+    #    (so a scaled/negative X falls back to e.g. layers["lognorm"]).
     if allow_recovery:
-        det = detect_normalization(adata.X, n_sample=n_sample, seed=seed)
-        if det["is_log1p"]:
-            rec = reverse_log1p(adata.X, base=det["base"], robust=robust)
-            return {"counts": rec["counts"], "source": "recovered", "base": det["base"]}
+        for src, M in _recovery_candidates(adata, exclude):
+            if M is None:
+                continue
+            det = detect_normalization(M, n_sample=n_sample, seed=seed)
+            if det["is_log1p"]:
+                rec = reverse_log1p(M, base=det["base"], robust=robust)
+                return {"counts": rec["counts"], "source": src, "base": det["base"]}
 
     raise CountsUnavailable(
-        "no integer counts in whitelist layers / X / .raw, and X is not log1p-recoverable"
+        "no integer counts in whitelist layers / X / .raw, and neither X nor any "
+        "layer is log1p-recoverable"
     )
